@@ -23,6 +23,7 @@ static inline uint16_t mkword(uint8_t lo, uint8_t hi)
 cpu_t *cpu_new(void)
 {
 	cpu_t *c = malloc(sizeof(struct cpu_s));
+	memset(c, 0x00, sizeof(struct cpu_s));
 	c->mem = malloc(sizeof(uint8_t) * 0xffff);	//64kb
 	memset(c->mem, 0x00, sizeof(uint8_t) * 0xffff);
 	c->x = c->y = c->acc = 0;
@@ -107,7 +108,12 @@ ldaabx: //load acc from $(op1op2) + x
 	goto loop;
 
 adcimm: //add op1 to acc
-	cpu->acc += cpu->mem[cpu->pc];
+	cpu->acc += cpu->mem[cpu->pc] + cpu->carry_flag;
+
+	cpu->zero_flag = (cpu->acc == 0) ? 1 : 0;
+	cpu->carry_flag = (cpu->acc == 0) ? 1 : 0;
+	cpu->negative_flag = (cpu->acc >= 0x80) ? 1 : 0;
+		
 	cpu->pc += 1;
 	goto loop;
 
@@ -117,6 +123,15 @@ dmpcpu: //dump cpu info
 	printf("\tip:\t%.4x\n", cpu->pc);
 	printf("\tsp:\t%.2x\n", cpu->sp);
 	printf("\tstatus:\t%.2x\n", cpu->status);
+	printf("\t\t|nf|of|bc|dm|id|zf|cf|\n");
+	printf("\t\t| %i| %i| %i| %i| %i| %i| %i|\n",
+			cpu->negative_flag,
+			cpu->overflow_flag,
+			cpu->break_command,
+			cpu->decimal_mode,
+			cpu->interrupt_disable,
+			cpu->zero_flag,
+			cpu->carry_flag);
 	printf("\n");
 	printf("\tacc:\t%.2x\n", cpu->acc);
 	printf("\tx:\t%.2x\n", cpu->x);
