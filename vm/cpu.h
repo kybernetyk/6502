@@ -15,6 +15,7 @@ typedef struct cpu_s {
 			uint8_t interrupt_disable: 1;
 			uint8_t decimal_mode: 1;
 			uint8_t break_command: 1;
+			uint8_t unnamed: 1;
 			uint8_t overflow_flag: 1;
 			uint8_t negative_flag: 1;
 		};

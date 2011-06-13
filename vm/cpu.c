@@ -30,6 +30,7 @@ cpu_t *cpu_new(void)
 	c->pc = 0;
 	c->sp = 0x01ff;
 	c->status = 0x00;
+	c->unnamed = 1;
 	return c;
 }
 
@@ -85,11 +86,13 @@ jmpabs: //jmp absolute to $(op1op2)
 
 ldaimm: //load op1 into acc
 	cpu->acc = cpu->mem[cpu->pc];
+	cpu->zero_flag = (cpu->acc == 0);
 	cpu->pc += 1;
 	goto loop;
 
 ldximm: //load op1 into x
 	cpu->x = cpu->mem[cpu->pc];
+	cpu->zero_flag = (cpu->x == 0);
 	cpu->pc += 1;
 	goto loop;
 
@@ -110,10 +113,9 @@ ldaabx: //load acc from $(op1op2) + x
 adcimm: //add op1 to acc
 	cpu->acc += cpu->mem[cpu->pc] + cpu->carry_flag;
 
-	cpu->zero_flag = (cpu->acc == 0) ? 1 : 0;
-	cpu->carry_flag = (cpu->acc == 0) ? 1 : 0;
-	cpu->negative_flag = (cpu->acc >= 0x80) ? 1 : 0;
-		
+	cpu->zero_flag = (cpu->acc == 0);
+	cpu->carry_flag = (cpu->acc == 0);
+	cpu->negative_flag = (cpu->acc & 0x80) >> 7;
 	cpu->pc += 1;
 	goto loop;
 
@@ -123,10 +125,11 @@ dmpcpu: //dump cpu info
 	printf("\tip:\t%.4x\n", cpu->pc);
 	printf("\tsp:\t%.2x\n", cpu->sp);
 	printf("\tstatus:\t%.2x\n", cpu->status);
-	printf("\t\t|nf|of|bc|dm|id|zf|cf|\n");
-	printf("\t\t| %i| %i| %i| %i| %i| %i| %i|\n",
+	printf("\t\t|nf|of|??|bc|dm|id|zf|cf|\n");
+	printf("\t\t| %i| %i| %i| %i| %i| %i| %i| %i|\n",
 			cpu->negative_flag,
 			cpu->overflow_flag,
+			cpu->unnamed,
 			cpu->break_command,
 			cpu->decimal_mode,
 			cpu->interrupt_disable,
