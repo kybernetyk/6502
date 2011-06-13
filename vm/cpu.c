@@ -11,8 +11,14 @@
 /*
  * makro to convert 2 uint8 to one uint16
  */
-#define mkword(lo, hi) \
+/*#define mkword(lo, hi) \
 	((uint16_t)((uint8_t)(lo)) | (((uint16_t)(uint8_t)(hi))<<8))
+*/
+static inline uint16_t mkword(uint8_t lo, uint8_t hi)
+{
+	return ((uint16_t)((uint8_t)(lo)) | (((uint16_t)(uint8_t)(hi))<<8));
+}
+
 
 cpu_t *cpu_new(void)
 {

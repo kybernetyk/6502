@@ -1,6 +1,6 @@
 CC=clang
 #LIBS=-lcurl
-CFLAGS=-c -Wall
+CFLAGS=-c -Wall -O3 
 #EXTS=zstr/*.c
 
 EXECNAME=vm
