@@ -26,8 +26,9 @@ cpu_t *cpu_new(void)
 	c->mem = malloc(sizeof(uint8_t) * 0xffff);	//64kb
 	memset(c->mem, 0x00, sizeof(uint8_t) * 0xffff);
 	c->x = c->y = c->acc = 0;
-	c->ip = 0;
+	c->pc = 0;
 	c->sp = 0x01ff;
+	c->status = 0x00;
 	return c;
 }
 
@@ -62,13 +63,13 @@ void cpu_exec(cpu_t *cpu, uint16_t base, void *opcds, size_t len)
 
 
 	uint8_t oc;
-	cpu->ip = base;
+	cpu->pc = base;
 loop:
-	if (cpu->ip >= len + base) {
+	if (cpu->pc >= len + base) {
 		goto end;
 	}
-	oc = cpu->mem[cpu->ip];
-	cpu->ip++;
+	oc = cpu->mem[cpu->pc];
+	cpu->pc++;
 
 	//skip invalid opcodes
 	if (octbl[oc] == 0x00) {
@@ -78,42 +79,42 @@ loop:
 	goto *octbl[oc];
 
 jmpabs: //jmp absolute to $(op1op2)
-	cpu->ip = mkword(cpu->mem[cpu->ip], cpu->mem[cpu->ip + 1]);
+	cpu->pc = mkword(cpu->mem[cpu->pc], cpu->mem[cpu->pc + 1]);
 	goto loop;
 
 ldaimm: //load op1 into acc
-	cpu->acc = cpu->mem[cpu->ip];
-	cpu->ip += 1;
+	cpu->acc = cpu->mem[cpu->pc];
+	cpu->pc += 1;
 	goto loop;
 
 ldximm: //load op1 into x
-	cpu->x = cpu->mem[cpu->ip];
-	cpu->ip += 1;
+	cpu->x = cpu->mem[cpu->pc];
+	cpu->pc += 1;
 	goto loop;
 
 staabx: //store acc into $(op1op2) + x
 	cpu->mem[
-	    mkword(cpu->mem[cpu->ip], cpu->mem[cpu->ip + 1])
+	    mkword(cpu->mem[cpu->pc], cpu->mem[cpu->pc + 1])
 	    + cpu->x] = cpu->acc;
-	cpu->ip += 2;
+	cpu->pc += 2;
 	goto loop;
 
 ldaabx: //load acc from $(op1op2) + x
 	cpu->acc = cpu->mem[
-	               mkword(cpu->mem[cpu->ip], cpu->mem[cpu->ip + 1])
+	               mkword(cpu->mem[cpu->pc], cpu->mem[cpu->pc + 1])
 	               + cpu->x];
-	cpu->ip += 2;
+	cpu->pc += 2;
 	goto loop;
 
 adcimm: //add op1 to acc
-	cpu->acc += cpu->mem[cpu->ip];
-	cpu->ip += 1;
+	cpu->acc += cpu->mem[cpu->pc];
+	cpu->pc += 1;
 	goto loop;
 
 dmpcpu: //dump cpu info
 	printf("opcode 0xff dmpcpu:");
 	printf("\n===========================================\n");
-	printf("\tip:\t%.4x\n", cpu->ip);
+	printf("\tip:\t%.4x\n", cpu->pc);
 	printf("\tsp:\t%.2x\n", cpu->sp);
 	printf("\tstatus:\t%.2x\n", cpu->status);
 	printf("\n");
