@@ -19,6 +19,5 @@ int main(int argc, char **argv)
 
 	cpu_free(mycpu);
 
-
 	return 0;
 }
